@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>현대자동차 안전관리 교육 퀴즈</title>
+  <meta name="robots" content="noindex, nofollow" />
+  <meta property="og:title" content="현대자동차 안전관리 교육 퀴즈" />
+  <meta property="og:description" content="현대자동차 물리보안 캠페인 — 안전관리 교육 퀴즈에 참여해 주세요." />
+  <meta property="og:type" content="website" />
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23002C5F'/><text x='50%25' y='54%25' dominant-baseline='middle' text-anchor='middle' font-family='Arial Black,sans-serif' font-size='20' font-weight='900' fill='white'>H</text></svg>" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
+    body { font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', sans-serif; background: #F6F6F6; }
+    .screen-fade { animation: fadeIn 0.25s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    .pop-in { animation: popIn 0.3s cubic-bezier(0.34,1.56,0.64,1); }
+    @keyframes popIn { from { opacity: 0; transform: scale(0.85) translateY(20px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+    .btn-press { transition: transform 0.1s ease, box-shadow 0.1s ease; }
+    .btn-press:active { transform: scale(0.96); }
+    .progress-bar { transition: width 0.5s cubic-bezier(0.4,0,0.2,1); }
+    ::-webkit-scrollbar { display: none; }
+    select { -webkit-appearance: none; appearance: none; }
+    input[type=tel]::-webkit-inner-spin-button,
+    input[type=tel]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+  </style>
+</head>
+<body class="min-h-screen">
+
+<!-- 로딩 스피너: Tailwind 로드 전 흰 화면 방지 -->
+<div id="initial-loader" style="position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#F6F6F6;z-index:9999;">
+  <div style="width:48px;height:48px;border:4px solid #E5E7EB;border-top-color:#002C5F;border-radius:50%;animation:spin 0.8s linear infinite;"></div>
+  <p style="margin-top:14px;font-family:'Malgun Gothic',sans-serif;font-size:13px;color:#6B7280;">잠시만 기다려 주세요...</p>
+</div>
+<style>@keyframes spin{to{transform:rotate(360deg)}}</style>
+
+<div id="app" class="max-w-md mx-auto min-h-screen bg-white relative shadow-lg"></div>
+
+<script>
+// ─────────────────────────────────────────────
+// QUIZ DATA
+// ─────────────────────────────────────────────
+const QUIZ_SETS = {
+  1: [
+    {
+      type: 'ox',
+      question: '급한 업무 처리이기 때문에 자재를 10분 정도 반출하는 것은 반출증 작성이 필요 없다.',
+      answer: 'X',
+      explanation: '아무리 급한 업무 처리라고 하더라도, 사내에서 자산을 반출할 경우에는 출입보안시스템으로 반출 승인을 받아야 합니다.'
+    },
+    {
+      type: 'multiple',
+      question: '사내에 위장막이 씌워져 있는 차량이 방치되어 있을 때 적절한 행동은 무엇인가요?',
+      options: ['위장막을 살짝 걷어본다', '신기하니까 사진을 찍어 외부에 공유한다', '다른 사람 몰래 탑승해본다', '관리부서에 제보한다'],
+      answer: 3,
+      explanation: '위장막이 씌워져 있는 차량은 신차이기 때문에 신차와 관련된 일체의 정보(디자인 / 생산일정 / 차량가격 / 특성 등)는 비밀로 관리되어야 합니다.'
+    }
+  ],
+  2: [
+    {
+      type: 'ox',
+      question: '사내에서 사진을 촬영하는 것은 가능하다.',
+      answer: 'X',
+      explanation: '원칙적으로 사내에서 촬영을 하여서는 안됩니다. 불가피하게 업무상 촬영이 꼭 필요한 경우라면, 소속 부서의 부서장 승인을 득한 후 각 사업장 보안관련 부서에 촬영 프로세스를 문의해야 합니다.'
+    },
+    {
+      type: 'sequence',
+      question: '회사 자산을 사외로 반출할 경우, 자산반출 프로세스를 순서에 맞게 나열해 주세요.',
+      items: ['출입보안시스템 접속', '반출증 작성', '반출결재'],
+      answer: [0, 1, 2],
+      explanation: '자산반출 프로세스: ① 출입보안시스템 접속 → ② 반출증 작성 → ③ 반출결재'
+    }
+  ],
+  3: [
+    {
+      type: 'sequence',
+      question: '업무 목적상 방문객 출입이 필요할 경우, 방문객 출입 절차를 순서대로 나열해 주세요.',
+      items: ['출입예약시스템 접속', '피방문자 승인', '방문객센터 방문', '반입 물품 확인 및 방문 접수'],
+      answer: [0, 1, 2, 3],
+      explanation: '방문객 출입 절차: ① 출입예약시스템 접속 → ② 피방문자 승인 → ③ 방문객센터 방문 → ④ 반입 물품 확인 및 방문 접수'
+    },
+    {
+      type: 'ox',
+      question: '방문신청을 해서 사내에 출입한 방문객은 임직원 동행이 필요하지 않다.',
+      answer: 'X',
+      explanation: '방문 신청이 완료된 방문객이라 하더라도, 출입 승인이 허가된 구역만 출입이 가능하기에 사내에서는 항상 피방문자와 동행해야 합니다.'
+    }
+  ]
+};
+
+const LOCATIONS = ['울산공장', '아산공장', '전주공장', '남양연구소'];
+
+// ─────────────────────────────────────────────
+// STATE
+// ─────────────────────────────────────────────
+const state = {
+  screen: 'entry',
+  set: 1,
+  location: '',
+  team: '',
+  currentQ: 0,
+  seqSelected: [],
+  seqShuffled: null,
+  popup: null, // { isCorrect, explanation, isLast }
+  survey: {
+    q1: null, q2: '', q3: null, q4: '',
+    q5: null, q6: null, q7: '', q8: '',
+    name: '', phone2: '', phone3: ''
+  }
+};
+
+// ─────────────────────────────────────────────
+// UTILS
+// ─────────────────────────────────────────────
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function h(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+// ─────────────────────────────────────────────
+// RENDER
+// ─────────────────────────────────────────────
+function render() {
+  const app = document.getElementById('app');
+  if (state.screen === 'entry')    app.innerHTML = renderEntry();
+  else if (state.screen === 'quiz')     app.innerHTML = renderQuiz();
+  else if (state.screen === 'survey')   app.innerHTML = renderSurvey();
+  else if (state.screen === 'complete') app.innerHTML = renderComplete();
+}
+
+// ─────────────────────────────────────────────
+// SCREEN 1 — ENTRY
+// ─────────────────────────────────────────────
+function renderEntry() {
+  const canStart = state.location && state.team.trim();
+  return `
+<div class="flex flex-col min-h-screen screen-fade">
+
+  <!-- Header -->
+  <div style="background:#002C5F" class="px-6 pt-10 pb-8 text-white">
+    <div class="flex items-center gap-3 mb-6">
+      <div class="w-11 h-11 bg-white rounded-xl flex items-center justify-center shadow-md">
+        <svg viewBox="0 0 40 40" class="w-8 h-8" fill="none">
+          <text x="50%" y="72%" dominant-baseline="middle" text-anchor="middle"
+            font-size="26" font-weight="900" fill="#002C5F">H</text>
+        </svg>
+      </div>
+      <div>
+        <p class="text-xs font-semibold tracking-widest opacity-60">HYUNDAI MOTOR</p>
+        <p class="text-sm font-bold opacity-90">물리보안 캠페인</p>
+      </div>
+    </div>
+    <h1 class="text-3xl font-black leading-tight">안전관리<br>교육 퀴즈</h1>
+    <div class="mt-3 inline-flex items-center gap-1.5 bg-white bg-opacity-20 rounded-full px-3 py-1">
+      <span class="w-2 h-2 bg-white rounded-full"></span>
+      <span class="text-xs font-bold tracking-wide">SET ${state.set}</span>
+    </div>
+  </div>
+
+  <!-- Body -->
+  <div class="flex-1 px-5 py-6">
+    <div class="bg-blue-50 border border-blue-100 rounded-2xl p-4 mb-6 flex items-start gap-3">
+      <span class="text-lg mt-0.5">📋</span>
+      <p class="text-sm text-blue-800 font-medium leading-relaxed">퀴즈 시작 전 아래 정보를 입력해 주세요.</p>
+    </div>
+
+    <!-- 소속 -->
+    <div class="mb-5">
+      <label class="block text-sm font-bold text-gray-700 mb-2">
+        소속 <span class="text-red-500">*</span>
+      </label>
+      <div class="relative">
+        <select
+          onchange="state.location=this.value; document.getElementById('start-btn').disabled=!(state.location&&state.team.trim())"
+          class="w-full border-2 rounded-2xl px-4 py-3.5 text-sm bg-white focus:outline-none transition-colors pr-10
+            ${state.location ? 'border-blue-500 text-gray-800' : 'border-gray-200 text-gray-400'}">
+          <option value="">소속을 선택하세요</option>
+          ${LOCATIONS.map(l => `<option value="${l}" ${state.location===l?'selected':''}>${l}</option>`).join('')}
+        </select>
+        <span class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none text-xs">▼</span>
+      </div>
+    </div>
+
+    <!-- 팀 -->
+    <div class="mb-8">
+      <label class="block text-sm font-bold text-gray-700 mb-2">
+        팀 <span class="text-red-500">*</span>
+      </label>
+      <input type="text" placeholder="팀 이름을 입력하세요"
+        value="${h(state.team)}"
+        oninput="state.team=this.value; document.getElementById('start-btn').disabled=!(state.location&&state.team.trim())"
+        class="w-full border-2 rounded-2xl px-4 py-3.5 text-sm focus:outline-none transition-colors
+          ${state.team ? 'border-blue-500 text-gray-800' : 'border-gray-200 text-gray-500'}" />
+    </div>
+
+    <!-- Guide -->
+    <div class="rounded-2xl bg-gray-50 p-4 space-y-1.5">
+      <p class="text-xs text-gray-500 flex items-start gap-1.5"><span>·</span><span>퀴즈는 총 <strong>2문제</strong>로 구성됩니다.</span></p>
+      <p class="text-xs text-gray-500 flex items-start gap-1.5"><span>·</span><span>정답 여부와 관계없이 바로 해설을 확인할 수 있습니다.</span></p>
+      <p class="text-xs text-gray-500 flex items-start gap-1.5"><span>·</span><span>퀴즈 완료 후 설문조사가 진행됩니다.</span></p>
+    </div>
+  </div>
+
+  <!-- CTA -->
+  <div class="px-5 pb-10">
+    <button id="start-btn" onclick="handleStart()"
+      style="${canStart ? 'background:#002C5F' : 'background:#D1D5DB'}"
+      class="btn-press w-full text-white py-4 rounded-2xl text-base font-bold shadow-lg"
+      ${canStart ? '' : 'disabled'}>
+      퀴즈 시작하기
+    </button>
+  </div>
+</div>`;
+}
+
+function handleStart() {
+  if (!state.location || !state.team.trim()) return;
+  const availableSets = state.location === '아산공장' ? [1, 2] : [1, 2, 3];
+  state.set = availableSets[Math.floor(Math.random() * availableSets.length)];
+  state.currentQ = 0;
+  state.seqSelected = [];
+  state.seqShuffled = null;
+  state.screen = 'quiz';
+  render();
+}
+
+// ─────────────────────────────────────────────
+// SCREEN 2 — QUIZ
+// ─────────────────────────────────────────────
+function renderQuiz() {
+  const qs = QUIZ_SETS[state.set];
+  const qi = state.currentQ;
+  const q = qs[qi];
+  const pct = (qi / qs.length) * 100;
+
+  // Initialize shuffle once per question
+  if (q.type === 'sequence' && !state.seqShuffled) {
+    state.seqShuffled = shuffle([...Array(q.items.length).keys()]);
+  }
+
+  const allSeqDone = q.type === 'sequence' && state.seqSelected.length === q.items.length;
+
+  return `
+<div class="flex flex-col min-h-screen screen-fade">
+
+  <!-- Header -->
+  <div style="background:#002C5F" class="px-5 pt-7 pb-5 text-white">
+    <div class="flex items-center justify-between mb-4">
+      <div class="flex items-center gap-2">
+        <div class="w-7 h-7 bg-white rounded-lg flex items-center justify-center">
+          <span class="text-xs font-black" style="color:#002C5F">H</span>
+        </div>
+        <span class="text-sm font-bold opacity-80">안전관리 교육 퀴즈 · SET ${state.set}</span>
+      </div>
+      <span class="text-sm font-bold opacity-70">${qi + 1} / ${qs.length}</span>
+    </div>
+    <!-- Progress -->
+    <div class="w-full h-2 rounded-full" style="background:rgba(255,255,255,0.2)">
+      <div class="h-2 rounded-full bg-white progress-bar" style="width:${pct}%"></div>
+    </div>
+  </div>
+
+  <!-- Question Body -->
+  <div class="flex-1 px-5 py-6 overflow-y-auto">
+    <div class="mb-3">
+      <span class="inline-block text-xs font-bold px-3 py-1 rounded-full
+        ${q.type==='ox' ? 'bg-blue-100 text-blue-700' : q.type==='multiple' ? 'bg-purple-100 text-purple-700' : 'bg-amber-100 text-amber-700'}">
+        ${q.type==='ox' ? 'O / X 문제' : q.type==='multiple' ? '객관식' : '순서 맞추기'}
+      </span>
+    </div>
+    <p class="text-base font-bold text-gray-800 leading-relaxed mb-6">Q${qi+1}. ${q.question}</p>
+
+    ${q.type === 'ox' ? renderOX(qi) : ''}
+    ${q.type === 'multiple' ? renderMultiple(q, qi) : ''}
+    ${q.type === 'sequence' ? renderSequence(q) : ''}
+  </div>
+
+  <!-- Sequence Submit Button -->
+  ${q.type === 'sequence' ? `
+  <div class="px-5 pb-10">
+    <button onclick="handleSeqSubmit(${qi})"
+      style="${allSeqDone ? 'background:#002C5F' : 'background:#D1D5DB'}"
+      class="btn-press w-full text-white py-4 rounded-2xl text-base font-bold shadow-lg"
+      ${allSeqDone ? '' : 'disabled'}>
+      정답 확인하기
+    </button>
+  </div>` : ''}
+
+</div>
+
+${state.popup ? renderPopup() : ''}`;
+}
+
+function renderOX(qi) {
+  return `
+<div class="grid grid-cols-2 gap-4">
+  <button onclick="handleOX('O',${qi})"
+    class="btn-press h-32 rounded-2xl text-6xl font-black shadow-md border-2 border-blue-100 bg-blue-50 text-blue-500 hover:bg-blue-100 transition-colors">
+    O
+  </button>
+  <button onclick="handleOX('X',${qi})"
+    class="btn-press h-32 rounded-2xl text-6xl font-black shadow-md border-2 border-red-100 bg-red-50 text-red-400 hover:bg-red-100 transition-colors">
+    X
+  </button>
+</div>`;
+}
+
+function renderMultiple(q, qi) {
+  const nums = ['①','②','③','④'];
+  return `
+<div class="flex flex-col gap-3">
+  ${q.options.map((opt, i) => `
+  <button onclick="handleMultiple(${i},${qi})"
+    class="btn-press text-left px-4 py-4 rounded-2xl border-2 border-gray-200 bg-white shadow-sm hover:border-blue-300 hover:bg-blue-50 transition-all flex items-center gap-3">
+    <span class="w-8 h-8 rounded-full bg-gray-100 text-center text-sm font-bold text-gray-600 flex-shrink-0 flex items-center justify-center">
+      ${nums[i]}
+    </span>
+    <span class="text-sm text-gray-700 leading-relaxed">${opt}</span>
+  </button>`).join('')}
+</div>`;
+}
+
+function renderSequence(q) {
+  return `
+<div>
+  <p class="text-xs text-gray-400 mb-4 leading-relaxed">항목을 올바른 순서대로 클릭하세요.<br>선택한 항목을 다시 클릭하면 선택이 취소됩니다.</p>
+  <div class="flex flex-col gap-3">
+    ${state.seqShuffled.map(idx => {
+      const selOrder = state.seqSelected.indexOf(idx);
+      const isSel = selOrder !== -1;
+      return `
+    <button onclick="handleSeqClick(${idx})"
+      class="btn-press text-left px-4 py-4 rounded-2xl border-2 shadow-sm transition-all flex items-center gap-3
+        ${isSel ? 'border-blue-500 bg-blue-50' : 'border-gray-200 bg-white hover:border-blue-300'}">
+      <span class="w-9 h-9 rounded-xl flex items-center justify-center text-sm font-black flex-shrink-0 transition-all
+        ${isSel ? 'text-white' : 'bg-gray-100 text-gray-400'}"
+        style="${isSel ? 'background:#002C5F' : ''}">
+        ${isSel ? selOrder + 1 : '?'}
+      </span>
+      <span class="text-sm font-medium ${isSel ? 'text-blue-800' : 'text-gray-700'}">${q.items[idx]}</span>
+    </button>`;
+    }).join('')}
+  </div>
+</div>`;
+}
+
+function handleOX(sel, qi) {
+  const q = QUIZ_SETS[state.set][qi];
+  openPopup(sel === q.answer, q.explanation, qi);
+}
+
+function handleMultiple(idx, qi) {
+  const q = QUIZ_SETS[state.set][qi];
+  openPopup(idx === q.answer, q.explanation, qi);
+}
+
+function handleSeqClick(idx) {
+  const pos = state.seqSelected.indexOf(idx);
+  if (pos !== -1) state.seqSelected.splice(pos, 1);
+  else state.seqSelected.push(idx);
+  render();
+}
+
+function handleSeqSubmit(qi) {
+  const q = QUIZ_SETS[state.set][qi];
+  const correct = JSON.stringify(state.seqSelected) === JSON.stringify(q.answer);
+  openPopup(correct, q.explanation, qi);
+}
+
+// ─────────────────────────────────────────────
+// POPUP
+// ─────────────────────────────────────────────
+function openPopup(isCorrect, explanation, qi) {
+  const isLast = qi >= QUIZ_SETS[state.set].length - 1;
+  state.popup = { isCorrect, explanation, isLast };
+  render();
+}
+
+function renderPopup() {
+  const { isCorrect, explanation, isLast } = state.popup;
+  const color = isCorrect ? '#16a34a' : '#dc2626';
+  const bgColor = isCorrect ? '#f0fdf4' : '#fef2f2';
+  return `
+<div class="fixed inset-0 z-50 flex items-end justify-center px-4 pb-6" style="background:rgba(0,0,0,0.55)">
+  <div class="pop-in w-full max-w-md bg-white rounded-3xl overflow-hidden shadow-2xl">
+
+    <!-- Top band -->
+    <div class="px-6 pt-6 pb-5" style="background:${bgColor}">
+      <div class="flex items-center gap-4">
+        <!-- Owl -->
+        <div class="w-16 h-16 rounded-2xl flex items-center justify-center flex-shrink-0 overflow-hidden"
+          style="background:${isCorrect ? '#dcfce7' : '#fee2e2'}">
+          <img src="owl.png" alt="부엉이" class="w-14 h-14 object-contain"
+            onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+          <span style="display:none;font-size:2.2rem">${isCorrect ? '🦉' : '🦉'}</span>
+        </div>
+        <div>
+          <p class="text-xs font-bold uppercase tracking-wider mb-0.5" style="color:${color}">
+            ${isCorrect ? '정답' : '오답'}
+          </p>
+          <p class="text-xl font-black" style="color:${color}">
+            ${isCorrect ? '정답입니다! 🎉' : '아쉽네요! 😢'}
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Explanation -->
+    <div class="px-6 py-5">
+      <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">📖 해설</p>
+      <p class="text-sm text-gray-700 leading-relaxed">${explanation}</p>
+    </div>
+
+    <!-- Button -->
+    <div class="px-6 pb-6">
+      <button onclick="closePopup()"
+        style="background:#002C5F"
+        class="btn-press w-full text-white py-4 rounded-2xl text-base font-bold shadow-lg">
+        ${isLast ? '설문조사로 이동 →' : '다음 문제로 →'}
+      </button>
+    </div>
+  </div>
+</div>`;
+}
+
+function closePopup() {
+  const { isLast } = state.popup;
+  state.popup = null;
+  state.seqSelected = [];
+  state.seqShuffled = null;
+  if (isLast) {
+    state.screen = 'survey';
+  } else {
+    state.currentQ++;
+  }
+  render();
+}
+
+// ─────────────────────────────────────────────
+// SCREEN 3 — SURVEY
+// ─────────────────────────────────────────────
+function renderSurvey() {
+  const sv = state.survey;
+  const satLabels = ['매우 불만족','불만족','보통','만족','매우 만족'];
+  const secLabels = ['매우 낮음','낮음','보통','높음','매우 높음'];
+  const booths = ['교육영상 재생부스','전시월 부스','에어볼 게임을 통한 퀴즈 부스'];
+
+  return `
+<div class="flex flex-col min-h-screen screen-fade">
+
+  <!-- Header -->
+  <div style="background:#002C5F" class="px-5 py-6 text-white sticky top-0 z-10">
+    <div class="flex items-center gap-2">
+      <div class="w-7 h-7 bg-white rounded-lg flex items-center justify-center">
+        <span class="text-xs font-black" style="color:#002C5F">H</span>
+      </div>
+      <div>
+        <p class="text-sm font-bold">물리보안 캠페인 설문조사</p>
+        <p class="text-xs opacity-60">수고하셨습니다! 짧은 설문에 참여해 주세요.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Survey Cards -->
+  <div class="flex-1 px-4 py-5 space-y-4 overflow-y-auto">
+
+    <!-- Q1 만족도 -->
+    <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+      <span class="inline-block text-xs font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full mb-2">Q1 · 필수</span>
+      <p class="text-sm font-bold text-gray-800 mb-4">물리보안 캠페인에 전반적으로 얼마나 만족하셨나요?</p>
+      ${renderScale('sv.q1', sv.q1, satLabels)}
+    </div>
+
+    <!-- Q2 만족도 이유 -->
+    <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+      <span class="inline-block text-xs font-bold text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full mb-2">Q2 · 선택</span>
+      <p class="text-sm font-bold text-gray-800 mb-3">위와 같이 선택한 이유를 작성해 주세요.</p>
+      <textarea placeholder="자유롭게 작성해 주세요."
+        oninput="state.survey.q2=this.value"
+        class="w-full border-2 border-gray-200 rounded-xl p-3 text-sm focus:outline-none focus:border-blue-400 resize-none h-20 transition-colors">${h(sv.q2)}</textarea>
+    </div>
+
+    <!-- Q3 부스 선택 -->
+    <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+      <span class="inline-block text-xs font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full mb-2">Q3 · 필수</span>
+      <p class="text-sm font-bold text-gray-800 mb-4">보안 규정을 쉽게 이해할 수 있었던 부스는 어느 부스인가요?</p>
+      <div class="flex flex-col gap-2">
+        ${booths.map((b, i) => `
+        <button onclick="state.survey.q3=${i}; render()"
+          class="btn-press text-left px-4 py-3.5 rounded-xl border-2 text-sm transition-all flex items-center gap-2
+            ${sv.q3===i ? 'border-blue-500 bg-blue-50 text-blue-800 font-semibold' : 'border-gray-200 text-gray-700 bg-white'}">
+          <span class="font-bold text-base">${['①','②','③'][i]}</span> ${b}
+        </button>`).join('')}
+      </div>
+    </div>
+
+    <!-- Q4 부스 이유 -->
+    <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+      <span class="inline-block text-xs font-bold text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full mb-2">Q4 · 선택</span>
+      <p class="text-sm font-bold text-gray-800 mb-3">위와 같이 선택한 이유를 작성해 주세요.</p>
+      <textarea placeholder="자유롭게 작성해 주세요."
+        oninput="state.survey.q4=this.value"
+        class="w-full border-2 border-gray-200 rounded-xl p-3 text-sm focus:outline-none focus:border-blue-400 resize-none h-20 transition-colors">${h(sv.q4)}</textarea>
+    </div>
+
+    <!-- Q5 참여 전 보안의식 -->
+    <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+      <span class="inline-block text-xs font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full mb-2">Q5 · 필수</span>
+      <p class="text-sm font-bold text-gray-800 mb-4">캠페인 참여 <span class="underline">전</span>, 본인의 보안의식 수준은?</p>
+      ${renderScale('sv.q5', sv.q5, secLabels)}
+    </div>
+
+    <!-- Q6 참여 후 보안의식 -->
+    <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+      <span class="inline-block text-xs font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full mb-2">Q6 · 필수</span>
+      <p class="text-sm font-bold text-gray-800 mb-4">캠페인 참여 <span class="underline">후</span>, 본인의 보안의식 수준은?</p>
+      ${renderScale('sv.q6', sv.q6, secLabels)}
+    </div>
+
+    <!-- Q7 아쉬운 점 -->
+    <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+      <span class="inline-block text-xs font-bold text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full mb-2">Q7 · 선택</span>
+      <p class="text-sm font-bold text-gray-800 mb-3">캠페인에서 아쉬웠던 점이나 개선이 필요한 점은?</p>
+      <textarea placeholder="자유롭게 작성해 주세요."
+        oninput="state.survey.q7=this.value"
+        class="w-full border-2 border-gray-200 rounded-xl p-3 text-sm focus:outline-none focus:border-blue-400 resize-none h-20 transition-colors">${h(sv.q7)}</textarea>
+    </div>
+
+    <!-- Q8 향후 추가 -->
+    <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+      <span class="inline-block text-xs font-bold text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full mb-2">Q8 · 선택</span>
+      <p class="text-sm font-bold text-gray-800 mb-3">향후 캠페인에 추가되었으면 하는 내용이나 형식은?</p>
+      <textarea placeholder="자유롭게 작성해 주세요."
+        oninput="state.survey.q8=this.value"
+        class="w-full border-2 border-gray-200 rounded-xl p-3 text-sm focus:outline-none focus:border-blue-400 resize-none h-20 transition-colors">${h(sv.q8)}</textarea>
+    </div>
+
+    <!-- Q9 경품 추첨 -->
+    <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
+      <span class="inline-block text-xs font-bold text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full mb-2">Q9 · 선택</span>
+      <p class="text-sm font-bold text-gray-800 mb-1">경품 추첨 참여를 원하시면 정보를 입력해 주세요.</p>
+      <p class="text-xs text-gray-400 mb-4 leading-relaxed">캠페인 종료 후 설문조사 참여자 중 추첨을 통해 소정의 상품을 전달드립니다.</p>
+
+      <div class="mb-3">
+        <label class="text-xs font-bold text-gray-600 mb-1.5 block">이름</label>
+        <input type="text" placeholder="이름 입력" value="${h(sv.name)}"
+          oninput="state.survey.name=this.value"
+          class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-400 transition-colors" />
+      </div>
+
+      <div>
+        <label class="text-xs font-bold text-gray-600 mb-1.5 block">핸드폰 번호</label>
+        <div class="flex items-center gap-2">
+          <div class="w-14 border-2 border-gray-200 rounded-xl px-3 py-3 text-sm text-center bg-gray-50 text-gray-500 font-bold">010</div>
+          <span class="text-gray-300 font-bold text-lg">—</span>
+          <input type="tel" inputmode="numeric" maxlength="4" placeholder="0000" value="${h(sv.phone2)}"
+            oninput="state.survey.phone2=this.value"
+            class="flex-1 border-2 border-gray-200 rounded-xl px-3 py-3 text-sm text-center focus:outline-none focus:border-blue-400 transition-colors" />
+          <span class="text-gray-300 font-bold text-lg">—</span>
+          <input type="tel" inputmode="numeric" maxlength="4" placeholder="0000" value="${h(sv.phone3)}"
+            oninput="state.survey.phone3=this.value"
+            class="flex-1 border-2 border-gray-200 rounded-xl px-3 py-3 text-sm text-center focus:outline-none focus:border-blue-400 transition-colors" />
+        </div>
+      </div>
+    </div>
+
+    <div class="h-2"></div>
+  </div>
+
+  <!-- Submit -->
+  <div class="px-5 pt-3 pb-10 bg-white border-t border-gray-100">
+    <p id="err-msg" class="text-red-500 text-xs text-center mb-2" style="display:none">
+      ⚠ 필수 항목(Q1, Q3, Q5, Q6)을 모두 선택해 주세요.
+    </p>
+    <button onclick="handleSubmit()"
+      style="background:#002C5F"
+      class="btn-press w-full text-white py-4 rounded-2xl text-base font-bold shadow-lg">
+      최종 제출하기
+    </button>
+  </div>
+</div>`;
+}
+
+function renderScale(field, value, labels) {
+  return `
+<div>
+  <div class="flex justify-between text-xs text-gray-400 mb-2 px-0.5">
+    <span>${labels[0]}</span><span>${labels[4]}</span>
+  </div>
+  <div class="flex gap-2">
+    ${[1,2,3,4,5].map(n => `
+    <button onclick="${field.replace('sv.', 'state.survey.')}=${n}; render()"
+      class="btn-press flex-1 py-3 rounded-xl text-sm font-bold border-2 transition-all
+        ${value===n ? 'text-white border-transparent shadow-md' : 'border-gray-200 text-gray-500 bg-white'}"
+      style="${value===n ? 'background:#002C5F' : ''}">
+      ${n}
+    </button>`).join('')}
+  </div>
+  ${value ? `<p class="text-center text-xs font-semibold mt-2" style="color:#007FA8">${labels[value-1]}</p>` : ''}
+</div>`;
+}
+
+function handleSubmit() {
+  const sv = state.survey;
+  if (sv.q1 === null || sv.q3 === null || sv.q5 === null || sv.q6 === null) {
+    const el = document.getElementById('err-msg');
+    if (el) { el.style.display = 'block'; }
+    window.scrollTo(0, document.body.scrollHeight);
+    return;
+  }
+  state.screen = 'complete';
+  render();
+}
+
+// ─────────────────────────────────────────────
+// SCREEN 4 — COMPLETE
+// ─────────────────────────────────────────────
+function renderComplete() {
+  return `
+<div class="flex flex-col min-h-screen items-center justify-center px-6 text-center screen-fade">
+
+  <!-- Check icon -->
+  <div class="w-24 h-24 rounded-full flex items-center justify-center mb-6 shadow-lg"
+    style="background:#002C5F">
+    <svg class="w-12 h-12 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+    </svg>
+  </div>
+
+  <h2 class="text-2xl font-black text-gray-800 mb-2">제출 완료!</h2>
+  <p class="text-base font-semibold text-gray-600 mb-1">${h(state.location)} · ${h(state.team)}팀</p>
+  <p class="text-lg font-bold text-gray-800 mb-8">안전한 하루 되세요! 🙏</p>
+
+  <!-- Security tips -->
+  <div class="w-full rounded-2xl p-5 mb-8 border border-blue-100 text-left" style="background:#EFF6FF">
+    <p class="text-sm font-bold mb-3" style="color:#002C5F">💡 물리보안 핵심 수칙</p>
+    <div class="space-y-2">
+      <div class="flex items-start gap-2">
+        <span class="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 text-xs text-white font-bold" style="background:#007FA8">1</span>
+        <p class="text-xs text-blue-800 leading-relaxed">자산 반출 시 <strong>반드시 반출증 작성</strong></p>
+      </div>
+      <div class="flex items-start gap-2">
+        <span class="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 text-xs text-white font-bold" style="background:#007FA8">2</span>
+        <p class="text-xs text-blue-800 leading-relaxed">사내 <strong>무단 촬영 금지</strong> (업무상 필요 시 부서장 승인)</p>
+      </div>
+      <div class="flex items-start gap-2">
+        <span class="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 text-xs text-white font-bold" style="background:#007FA8">3</span>
+        <p class="text-xs text-blue-800 leading-relaxed">신차 정보(디자인/일정/가격) <strong>철저한 비밀 유지</strong></p>
+      </div>
+      <div class="flex items-start gap-2">
+        <span class="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 text-xs text-white font-bold" style="background:#007FA8">4</span>
+        <p class="text-xs text-blue-800 leading-relaxed">방문객 사내 이동 시 <strong>임직원 동행 필수</strong></p>
+      </div>
+    </div>
+  </div>
+
+  <div class="w-12 h-1 bg-gray-200 rounded-full mx-auto mb-3"></div>
+  <p class="text-xs text-gray-400">HYUNDAI MOTOR · 물리보안 캠페인</p>
+</div>`;
+}
+
+// ─────────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────────
+(function init() {
+  render();
+  const loader = document.getElementById('initial-loader');
+  if (loader) loader.remove();
+})();
+</script>
+</body>
+</html>
