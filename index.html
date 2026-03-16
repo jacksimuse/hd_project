@@ -97,6 +97,7 @@ const LOCATIONS = ['울산공장', '아산공장', '전주공장', '남양연구
 const state = {
   screen: 'entry',
   set: 1,
+  forcedSet: null,
   location: '',
   team: '',
   currentQ: 0,
@@ -228,8 +229,12 @@ function renderEntry() {
 
 function handleStart() {
   if (!state.location || !state.team.trim()) return;
-  const availableSets = state.location === '아산공장' ? [1, 2] : [1, 2, 3];
-  state.set = availableSets[Math.floor(Math.random() * availableSets.length)];
+  if (state.forcedSet) {
+    state.set = state.forcedSet;
+  } else {
+    const availableSets = state.location === '아산공장' ? [1, 2] : [1, 2, 3];
+    state.set = availableSets[Math.floor(Math.random() * availableSets.length)];
+  }
   state.currentQ = 0;
   state.seqSelected = [];
   state.seqShuffled = null;
@@ -676,6 +681,11 @@ function renderComplete() {
 // INIT
 // ─────────────────────────────────────────────
 (function init() {
+  const params = new URLSearchParams(window.location.search);
+  const setParam = parseInt(params.get('set'), 10);
+  if (setParam >= 1 && setParam <= 3) {
+    state.forcedSet = setParam;
+  }
   render();
   const loader = document.getElementById('initial-loader');
   if (loader) loader.remove();
