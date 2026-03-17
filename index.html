@@ -113,6 +113,15 @@ const state = {
 };
 
 // ─────────────────────────────────────────────
+// CONSTANTS
+// ─────────────────────────────────────────────
+const SCALE_LABELS = {
+  q1: ['매우 불만족','불만족','보통','만족','매우 만족'],
+  q5: ['매우 낮음','낮음','보통','높음','매우 높음'],
+  q6: ['매우 낮음','낮음','보통','높음','매우 높음'],
+};
+
+// ─────────────────────────────────────────────
 // UTILS
 // ─────────────────────────────────────────────
 function shuffle(arr) {
@@ -135,21 +144,24 @@ function h(str) {
 // ─────────────────────────────────────────────
 // RENDER
 // ─────────────────────────────────────────────
+let _prevScreen = null;
 function render() {
   const app = document.getElementById('app');
-  if (state.screen === 'entry')    app.innerHTML = renderEntry();
-  else if (state.screen === 'quiz')     app.innerHTML = renderQuiz();
-  else if (state.screen === 'survey')   app.innerHTML = renderSurvey();
-  else if (state.screen === 'complete') app.innerHTML = renderComplete();
+  const animate = _prevScreen !== state.screen;
+  _prevScreen = state.screen;
+  if (state.screen === 'entry')    app.innerHTML = renderEntry(animate);
+  else if (state.screen === 'quiz')     app.innerHTML = renderQuiz(animate);
+  else if (state.screen === 'survey')   app.innerHTML = renderSurvey(animate);
+  else if (state.screen === 'complete') app.innerHTML = renderComplete(animate);
 }
 
 // ─────────────────────────────────────────────
 // SCREEN 1 — ENTRY
 // ─────────────────────────────────────────────
-function renderEntry() {
+function renderEntry(animate = true) {
   const canStart = state.location && state.team.trim();
   return `
-<div class="flex flex-col min-h-screen screen-fade">
+<div class="flex flex-col min-h-screen${animate ? ' screen-fade' : ''}">
 
   <!-- Header -->
   <div style="background:#002C5F" class="px-6 pt-10 pb-8 text-white">
@@ -181,8 +193,8 @@ function renderEntry() {
         소속 <span class="text-red-500">*</span>
       </label>
       <div class="relative">
-        <select
-          onchange="state.location=this.value; render()"
+        <select id="location-select"
+          onchange="state.location=this.value; updateEntry()"
           class="w-full border-2 rounded-2xl px-4 py-3.5 text-sm bg-white focus:outline-none transition-colors pr-10
             ${state.location ? 'border-blue-500 text-gray-800' : 'border-gray-200 text-gray-400'}">
           <option value="">소속을 선택하세요</option>
@@ -197,9 +209,9 @@ function renderEntry() {
       <label class="block text-sm font-bold text-gray-700 mb-2">
         팀 <span class="text-red-500">*</span>
       </label>
-      <input type="text" placeholder="팀 이름을 입력하세요"
+      <input id="team-input" type="text" placeholder="팀 이름을 입력하세요"
         value="${h(state.team)}"
-        oninput="state.team=this.value; render()"
+        oninput="state.team=this.value; updateEntry()"
         class="w-full border-2 rounded-2xl px-4 py-3.5 text-sm focus:outline-none transition-colors
           ${state.team ? 'border-blue-500 text-gray-800' : 'border-gray-200 text-gray-500'}" />
     </div>
@@ -214,14 +226,12 @@ function renderEntry() {
 
   <!-- CTA -->
   <div class="px-5 pb-10">
-    ${state.startAttempted && !canStart ? `
-      <div class="mb-3">
-        <p class="text-sm text-red-500 font-semibold text-center">
-          ${!state.location && !state.team.trim() ? '공장과 소속을 입력하세요' :
-            !state.location ? '공장을 선택해주세요' : '소속을 입력해주세요'}
-        </p>
-      </div>
-    ` : ''}
+    <div id="entry-validation-msg" class="mb-3" style="display:${state.startAttempted && !canStart ? 'block' : 'none'}">
+      <p class="text-sm text-red-500 font-semibold text-center">
+        ${!state.location && !state.team.trim() ? '공장과 소속을 입력하세요' :
+          !state.location ? '공장을 선택해주세요' : '소속을 입력해주세요'}
+      </p>
+    </div>
     <button id="start-btn" onclick="handleStart()"
       style="${canStart ? 'background:#002C5F' : 'background:#D1D5DB'}"
       class="btn-press w-full text-white py-4 rounded-2xl text-base font-bold shadow-lg">
@@ -229,6 +239,35 @@ function renderEntry() {
     </button>
   </div>
 </div>`;
+}
+
+function updateEntry() {
+  const canStart = !!(state.location && state.team.trim());
+  const btn = document.getElementById('start-btn');
+  if (btn) btn.style.background = canStart ? '#002C5F' : '#D1D5DB';
+  const sel = document.getElementById('location-select');
+  if (sel) {
+    sel.style.borderColor = state.location ? '#3b82f6' : '#e5e7eb';
+    sel.style.color = state.location ? '#1f2937' : '#9ca3af';
+  }
+  const inp = document.getElementById('team-input');
+  if (inp) {
+    inp.style.borderColor = state.team ? '#3b82f6' : '#e5e7eb';
+    inp.style.color = state.team ? '#1f2937' : '#6b7280';
+  }
+  if (state.startAttempted) {
+    const msg = document.getElementById('entry-validation-msg');
+    if (msg) {
+      if (!canStart) {
+        const text = !state.location && !state.team.trim() ? '공장과 소속을 입력하세요'
+          : !state.location ? '공장을 선택해주세요' : '소속을 입력해주세요';
+        msg.querySelector('p').textContent = text;
+        msg.style.display = 'block';
+      } else {
+        msg.style.display = 'none';
+      }
+    }
+  }
 }
 
 function handleStart() {
@@ -250,7 +289,7 @@ function handleStart() {
 // ─────────────────────────────────────────────
 // SCREEN 2 — QUIZ
 // ─────────────────────────────────────────────
-function renderQuiz() {
+function renderQuiz(animate = true) {
   const qs = QUIZ_SETS[state.set];
   const qi = state.currentQ;
   const q = qs[qi];
@@ -264,7 +303,7 @@ function renderQuiz() {
   const allSeqDone = q.type === 'sequence' && state.seqSelected.length === q.items.length;
 
   return `
-<div class="flex flex-col min-h-screen screen-fade">
+<div class="flex flex-col min-h-screen${animate ? ' screen-fade' : ''}">
 
   <!-- Header -->
   <div style="background:#002C5F" class="px-5 pt-7 pb-5 text-white">
@@ -301,10 +340,9 @@ function renderQuiz() {
   <!-- Sequence Submit Button -->
   ${q.type === 'sequence' ? `
   <div class="px-5 pb-10">
-    <button onclick="handleSeqSubmit(${qi})"
+    <button id="seq-submit-btn" onclick="handleSeqSubmit(${qi})"
       style="${allSeqDone ? 'background:#002C5F' : 'background:#D1D5DB'}"
-      class="btn-press w-full text-white py-4 rounded-2xl text-base font-bold shadow-lg"
-      ${allSeqDone ? '' : 'disabled'}>
+      class="btn-press w-full text-white py-4 rounded-2xl text-base font-bold shadow-lg">
       정답 확인하기
     </button>
   </div>` : ''}
@@ -343,15 +381,11 @@ function renderMultiple(q, qi) {
 </div>`;
 }
 
-function renderSequence(q) {
-  return `
-<div>
-  <p class="text-xs text-gray-400 mb-4 leading-relaxed">항목을 올바른 순서대로 클릭하세요.<br>선택한 항목을 다시 클릭하면 선택이 취소됩니다.</p>
-  <div class="flex flex-col gap-3">
-    ${state.seqShuffled.map(idx => {
-      const selOrder = state.seqSelected.indexOf(idx);
-      const isSel = selOrder !== -1;
-      return `
+function renderSeqItems(q) {
+  return state.seqShuffled.map(idx => {
+    const selOrder = state.seqSelected.indexOf(idx);
+    const isSel = selOrder !== -1;
+    return `
     <button onclick="handleSeqClick(${idx})"
       class="btn-press text-left px-4 py-4 rounded-2xl border-2 shadow-sm transition-all flex items-center gap-3
         ${isSel ? 'border-blue-500 bg-blue-50' : 'border-gray-200 bg-white hover:border-blue-300'}">
@@ -362,7 +396,15 @@ function renderSequence(q) {
       </span>
       <span class="text-sm font-medium ${isSel ? 'text-blue-800' : 'text-gray-700'}">${q.items[idx]}</span>
     </button>`;
-    }).join('')}
+  }).join('');
+}
+
+function renderSequence(q) {
+  return `
+<div>
+  <p class="text-xs text-gray-400 mb-4 leading-relaxed">항목을 올바른 순서대로 클릭하세요.<br>선택한 항목을 다시 클릭하면 선택이 취소됩니다.</p>
+  <div id="seq-list" class="flex flex-col gap-3">
+    ${renderSeqItems(q)}
   </div>
 </div>`;
 }
@@ -381,7 +423,12 @@ function handleSeqClick(idx) {
   const pos = state.seqSelected.indexOf(idx);
   if (pos !== -1) state.seqSelected.splice(pos, 1);
   else state.seqSelected.push(idx);
-  render();
+  const q = QUIZ_SETS[state.set][state.currentQ];
+  const listEl = document.getElementById('seq-list');
+  if (listEl) listEl.innerHTML = renderSeqItems(q);
+  const allDone = state.seqSelected.length === q.items.length;
+  const btn = document.getElementById('seq-submit-btn');
+  if (btn) btn.style.background = allDone ? '#002C5F' : '#D1D5DB';
 }
 
 function handleSeqSubmit(qi) {
@@ -462,14 +509,14 @@ function closePopup() {
 // ─────────────────────────────────────────────
 // SCREEN 3 — SURVEY
 // ─────────────────────────────────────────────
-function renderSurvey() {
+function renderSurvey(animate = true) {
   const sv = state.survey;
-  const satLabels = ['매우 불만족','불만족','보통','만족','매우 만족'];
-  const secLabels = ['매우 낮음','낮음','보통','높음','매우 높음'];
+  const satLabels = SCALE_LABELS.q1;
+  const secLabels = SCALE_LABELS.q5;
   const booths = ['교육영상 재생부스','전시월 부스','에어볼 게임을 통한 퀴즈 부스'];
 
   return `
-<div class="flex flex-col min-h-screen screen-fade">
+<div class="flex flex-col min-h-screen${animate ? ' screen-fade' : ''}">
 
   <!-- Header -->
   <div style="background:#002C5F" class="px-5 py-6 text-white sticky top-0 z-10">
@@ -491,7 +538,7 @@ function renderSurvey() {
     <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
       <span class="inline-block text-xs font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full mb-2">Q1 · 필수</span>
       <p class="text-sm font-bold text-gray-800 mb-4">물리보안 캠페인에 전반적으로 얼마나 만족하셨나요?</p>
-      ${renderScale('sv.q1', sv.q1, satLabels)}
+      ${renderScale('q1', sv.q1, satLabels)}
     </div>
 
     <!-- Q2 만족도 이유 -->
@@ -507,9 +554,9 @@ function renderSurvey() {
     <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
       <span class="inline-block text-xs font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full mb-2">Q3 · 필수</span>
       <p class="text-sm font-bold text-gray-800 mb-4">보안 규정을 쉽게 이해할 수 있었던 부스는 어느 부스인가요?</p>
-      <div class="flex flex-col gap-2">
+      <div id="booth-group" class="flex flex-col gap-2">
         ${booths.map((b, i) => `
-        <button onclick="state.survey.q3=${i}; render()"
+        <button onclick="selectBooth(${i})"
           class="btn-press text-left px-4 py-3.5 rounded-xl border-2 text-sm transition-all flex items-center gap-2
             ${sv.q3===i ? 'border-blue-500 bg-blue-50 text-blue-800 font-semibold' : 'border-gray-200 text-gray-700 bg-white'}">
           <span class="font-bold text-base">${['①','②','③'][i]}</span> ${b}
@@ -530,14 +577,14 @@ function renderSurvey() {
     <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
       <span class="inline-block text-xs font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full mb-2">Q5 · 필수</span>
       <p class="text-sm font-bold text-gray-800 mb-4">캠페인 참여 <span class="underline">전</span>, 본인의 보안의식 수준은?</p>
-      ${renderScale('sv.q5', sv.q5, secLabels)}
+      ${renderScale('q5', sv.q5, secLabels)}
     </div>
 
     <!-- Q6 참여 후 보안의식 -->
     <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
       <span class="inline-block text-xs font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full mb-2">Q6 · 필수</span>
       <p class="text-sm font-bold text-gray-800 mb-4">캠페인 참여 <span class="underline">후</span>, 본인의 보안의식 수준은?</p>
-      ${renderScale('sv.q6', sv.q6, secLabels)}
+      ${renderScale('q6', sv.q6, secLabels)}
     </div>
 
     <!-- Q7 아쉬운 점 -->
@@ -604,23 +651,47 @@ function renderSurvey() {
 </div>`;
 }
 
-function renderScale(field, value, labels) {
+function renderScale(fieldId, value, labels) {
   return `
-<div>
+<div id="scale-${fieldId}">
   <div class="flex justify-between text-xs text-gray-400 mb-2 px-0.5">
     <span>${labels[0]}</span><span>${labels[4]}</span>
   </div>
   <div class="flex gap-2">
     ${[1,2,3,4,5].map(n => `
-    <button onclick="${field.replace('sv.', 'state.survey.')}=${n}; render()"
+    <button onclick="selectScale('${fieldId}', ${n})"
       class="btn-press flex-1 py-3 rounded-xl text-sm font-bold border-2 transition-all
         ${value===n ? 'text-white border-transparent shadow-md' : 'border-gray-200 text-gray-500 bg-white'}"
       style="${value===n ? 'background:#002C5F' : ''}">
       ${n}
     </button>`).join('')}
   </div>
-  ${value ? `<p class="text-center text-xs font-semibold mt-2" style="color:#007FA8">${labels[value-1]}</p>` : ''}
+  <p id="scale-label-${fieldId}" class="text-center text-xs font-semibold mt-2" style="color:#007FA8; ${value ? '' : 'display:none'}">${value ? labels[value-1] : ''}</p>
 </div>`;
+}
+
+function selectBooth(i) {
+  state.survey.q3 = i;
+  const container = document.getElementById('booth-group');
+  if (!container) return;
+  container.querySelectorAll('button').forEach((btn, idx) => {
+    const sel = idx === i;
+    btn.className = `btn-press text-left px-4 py-3.5 rounded-xl border-2 text-sm transition-all flex items-center gap-2 ${sel ? 'border-blue-500 bg-blue-50 text-blue-800 font-semibold' : 'border-gray-200 text-gray-700 bg-white'}`;
+  });
+}
+
+function selectScale(fieldId, value) {
+  state.survey[fieldId] = value;
+  const labels = SCALE_LABELS[fieldId];
+  const container = document.getElementById('scale-' + fieldId);
+  if (!container) return;
+  container.querySelectorAll('button').forEach((btn, i) => {
+    const sel = (i + 1) === value;
+    btn.style.background = sel ? '#002C5F' : '';
+    btn.className = `btn-press flex-1 py-3 rounded-xl text-sm font-bold border-2 transition-all ${sel ? 'text-white border-transparent shadow-md' : 'border-gray-200 text-gray-500 bg-white'}`;
+  });
+  const labelEl = document.getElementById('scale-label-' + fieldId);
+  if (labelEl) { labelEl.textContent = labels[value - 1]; labelEl.style.display = 'block'; }
 }
 
 function handleSubmit() {
@@ -638,9 +709,9 @@ function handleSubmit() {
 // ─────────────────────────────────────────────
 // SCREEN 4 — COMPLETE
 // ─────────────────────────────────────────────
-function renderComplete() {
+function renderComplete(animate = true) {
   return `
-<div class="flex flex-col min-h-screen items-center justify-center px-6 text-center screen-fade">
+<div class="flex flex-col min-h-screen items-center justify-center px-6 text-center${animate ? ' screen-fade' : ''}">
 
   <!-- Check icon -->
   <div class="w-24 h-24 rounded-full flex items-center justify-center mb-6 shadow-lg"
