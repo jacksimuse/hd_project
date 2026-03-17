@@ -5,14 +5,45 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>현대자동차 안전관리 교육 퀴즈</title>
   <meta name="robots" content="noindex, nofollow" />
-  <meta property="og:title" content="현대자동차 안전관리 교육 퀴즈" />
+  <meta property="og:title" content="현대 안전 관리 교육" />
   <meta property="og:description" content="현대자동차 물리보안 캠페인 — 안전관리 교육 퀴즈에 참여해 주세요." />
   <meta property="og:type" content="website" />
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23002C5F'/><text x='50%25' y='54%25' dominant-baseline='middle' text-anchor='middle' font-family='Arial Black,sans-serif' font-size='20' font-weight='900' fill='white'>H</text></svg>" />
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
-    body { font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', sans-serif; background: #F6F6F6; }
+    @font-face {
+      font-family: 'HyundaiSans';
+      src: url('./HyundaiSansHeadOffice-Regular.ttf') format('truetype');
+      font-weight: normal;
+      font-style: normal;
+    }
+    @font-face {
+      font-family: 'HyundaiSans';
+      src: url('./HyundaiSansHeadOffice-Bold.ttf') format('truetype');
+      font-weight: bold;
+      font-style: normal;
+    }
+    * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; line-height: 1.65; }
+    body { font-family: 'HyundaiSans', 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', sans-serif; background: #F6F6F6; }
+    /* 폼 요소는 브라우저 기본 폰트를 사용하므로 명시적으로 강제 적용 */
+    input, select, textarea, button, option, ::placeholder {
+      font-family: 'HyundaiSans', 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', sans-serif !important;
+    }
+    /* 굵은 텍스트 전용 Bold 폰트 명시 */
+    b, strong,
+    .font-bold, .font-semibold, .font-extrabold, .font-black, .font-medium {
+      font-family: 'HyundaiSans', 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', sans-serif !important;
+      font-weight: bold !important;
+    }
+    /* 50~60대 사용자 접근성: 전체 폰트 +5px */
+    .text-xs   { font-size: 18px !important; }
+    .text-sm   { font-size: 20px !important; }
+    .text-base { font-size: 22px !important; }
+    .text-lg   { font-size: 24px !important; }
+    .text-xl   { font-size: 26px !important; }
+    .text-2xl  { font-size: 30px !important; }
+    .text-3xl  { font-size: 36px !important; }
+    .text-4xl  { font-size: 42px !important; }
     .screen-fade { animation: fadeIn 0.25s ease; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
     .pop-in { animation: popIn 0.3s cubic-bezier(0.34,1.56,0.64,1); }
@@ -21,7 +52,7 @@
     .btn-press:active { transform: scale(0.96); }
     .progress-bar { transition: width 0.5s cubic-bezier(0.4,0,0.2,1); }
     ::-webkit-scrollbar { display: none; }
-    select { -webkit-appearance: none; appearance: none; }
+    select { -webkit-appearance: none; appearance: none; line-height: 1.2 !important; padding-top: 10px !important; padding-bottom: 10px !important; height: auto !important; }
     input[type=tel]::-webkit-inner-spin-button,
     input[type=tel]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
   </style>
@@ -38,6 +69,12 @@
 <div id="app" class="max-w-md mx-auto min-h-screen bg-white relative shadow-lg"></div>
 
 <script>
+// ─────────────────────────────────────────────
+// SOUND EFFECTS
+// ─────────────────────────────────────────────
+const sfxQuestion = new Audio('./%23txt_point_Positive.mp3');
+const sfxPopup    = new Audio('./SCH - Button - 1.mp3');
+
 // ─────────────────────────────────────────────
 // QUIZ DATA
 // ─────────────────────────────────────────────
@@ -150,7 +187,10 @@ function render() {
   const animate = _prevScreen !== state.screen;
   _prevScreen = state.screen;
   if (state.screen === 'entry')    app.innerHTML = renderEntry(animate);
-  else if (state.screen === 'quiz')     app.innerHTML = renderQuiz(animate);
+  else if (state.screen === 'quiz') {
+    app.innerHTML = renderQuiz(animate);
+    if (!state.popup) { sfxQuestion.currentTime = 0; sfxQuestion.play().catch(() => {}); }
+  }
   else if (state.screen === 'survey')   app.innerHTML = renderSurvey(animate);
   else if (state.screen === 'complete') app.innerHTML = renderComplete(animate);
 }
@@ -167,23 +207,20 @@ function renderEntry(animate = true) {
   <div style="background:#002C5F" class="px-6 pt-10 pb-8 text-white">
     <div class="flex items-center gap-3 mb-6">
       <div class="w-11 h-11 bg-white rounded-xl flex items-center justify-center shadow-md">
-        <svg viewBox="0 0 40 40" class="w-8 h-8" fill="none">
-          <text x="50%" y="72%" dominant-baseline="middle" text-anchor="middle"
-            font-size="26" font-weight="900" fill="#002C5F">H</text>
-        </svg>
+        <img src="./KakaoTalk_20260317_203648435_01.png" class="w-9 h-7 object-contain">
       </div>
       <div>
         <p class="text-xs font-semibold tracking-widest opacity-60">HYUNDAI MOTOR</p>
-        <p class="text-sm font-bold opacity-90">물리보안 캠페인</p>
+        <p class="text-sm font-bold opacity-90" style="line-height: 1.5;">물리보안 캠페인</p>
       </div>
     </div>
-    <h1 class="text-3xl font-black leading-tight">안전관리<br>교육 퀴즈</h1>
+    <h1 class="text-3xl font-black leading-tight">안전 관리<br>교육 퀴즈</h1>
   </div>
 
   <!-- Body -->
   <div class="flex-1 px-5 py-6">
-    <div class="bg-blue-50 border border-blue-100 rounded-2xl p-4 mb-6 flex items-start gap-3">
-      <span class="text-lg mt-0.5">📋</span>
+    <div class="bg-blue-50 border border-blue-100 rounded-2xl p-4 mb-6 flex flex-col items-center text-center gap-1">
+      <span class="text-lg">📋</span>
       <p class="text-sm text-blue-800 font-medium leading-relaxed">퀴즈 시작 전 아래 정보를 입력해 주세요.</p>
     </div>
 
@@ -195,7 +232,7 @@ function renderEntry(animate = true) {
       <div class="relative">
         <select id="location-select"
           onchange="state.location=this.value; updateEntry()"
-          class="w-full border-2 rounded-2xl px-4 py-3.5 text-sm bg-white focus:outline-none transition-colors pr-10
+          class="w-full border-2 rounded-2xl px-4 text-sm bg-white focus:outline-none transition-colors pr-10
             ${state.location ? 'border-blue-500 text-gray-800' : 'border-gray-200 text-gray-400'}">
           <option value="">소속을 선택하세요</option>
           ${LOCATIONS.map(l => `<option value="${l}" ${state.location===l?'selected':''}>${l}</option>`).join('')}
@@ -310,7 +347,7 @@ function renderQuiz(animate = true) {
     <div class="flex items-center justify-between mb-4">
       <div class="flex items-center gap-2">
         <div class="w-7 h-7 bg-white rounded-lg flex items-center justify-center">
-          <span class="text-xs font-black" style="color:#002C5F">H</span>
+          <img src="./KakaoTalk_20260317_203648435_01.png" class="w-5 h-4 object-contain">
         </div>
         <span class="text-sm font-bold opacity-80">안전관리 교육 퀴즈 · SET ${state.set}</span>
       </div>
@@ -443,6 +480,7 @@ function handleSeqSubmit(qi) {
 function openPopup(isCorrect, explanation, qi) {
   const isLast = qi >= QUIZ_SETS[state.set].length - 1;
   state.popup = { isCorrect, explanation, isLast };
+  sfxPopup.currentTime = 0; sfxPopup.play().catch(() => {});
   render();
 }
 
@@ -522,11 +560,11 @@ function renderSurvey(animate = true) {
   <div style="background:#002C5F" class="px-5 py-6 text-white sticky top-0 z-10">
     <div class="flex items-center gap-2">
       <div class="w-7 h-7 bg-white rounded-lg flex items-center justify-center">
-        <span class="text-xs font-black" style="color:#002C5F">H</span>
+        <img src="./KakaoTalk_20260317_203648435_01.png" class="w-5 h-4 object-contain">
       </div>
       <div>
         <p class="text-sm font-bold">물리보안 캠페인 설문조사</p>
-        <p class="text-xs opacity-60">수고하셨습니다! 짧은 설문에 참여해 주세요.</p>
+        <p class="text-xs opacity-60" style="line-height: 1.2;">수고하셨습니다! 짧은 설문에 참여해 주세요.</p>
       </div>
     </div>
   </div>
@@ -583,7 +621,7 @@ function renderSurvey(animate = true) {
     <!-- Q6 참여 후 보안의식 -->
     <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
       <span class="inline-block text-xs font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full mb-2">Q6 · 필수</span>
-      <p class="text-sm font-bold text-gray-800 mb-4">캠페인 참여 <span class="underline">후</span>, 본인의 보안의식 수준은?</p>
+      <p class="text-sm font-bold text-gray-800 mb-4">캠페인 참여 후</span>, 본인의 보안의식 수준은?</p>
       ${renderScale('q6', sv.q6, secLabels)}
     </div>
 
@@ -711,7 +749,7 @@ function handleSubmit() {
 // ─────────────────────────────────────────────
 function renderComplete(animate = true) {
   return `
-<div class="flex flex-col min-h-screen items-center justify-center px-6 text-center${animate ? ' screen-fade' : ''}">
+<div class="flex flex-col min-h-screen items-center justify-center px-6 text-center${animate ? ' screen-fade' : ''}" style="background:#e4dcd3">
 
   <!-- Check icon -->
   <div class="w-24 h-24 rounded-full flex items-center justify-center mb-6 shadow-lg"
@@ -726,24 +764,24 @@ function renderComplete(animate = true) {
   <p class="text-lg font-bold text-gray-800 mb-8">안전한 하루 되세요! 🙏</p>
 
   <!-- Security tips -->
-  <div class="w-full rounded-2xl p-5 mb-8 border border-blue-100 text-left" style="background:#EFF6FF">
+  <div class="w-full rounded-2xl p-5 mb-8 border border-gray-200 text-left" style="background:#ffffff">
     <p class="text-sm font-bold mb-3" style="color:#002C5F">💡 물리보안 핵심 수칙</p>
     <div class="space-y-2">
       <div class="flex items-start gap-2">
-        <span class="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 text-xs text-white font-bold" style="background:#007FA8">1</span>
-        <p class="text-xs text-blue-800 leading-relaxed">자산 반출 시 <strong>반드시 반출증 작성</strong></p>
+        <span class="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 text-xs text-white font-bold" style="background:#002c5f">1</span>
+        <p class="text-xs text-gray-700 leading-relaxed">자산 반출 시 <strong>반드시 반출증 작성</strong></p>
       </div>
       <div class="flex items-start gap-2">
-        <span class="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 text-xs text-white font-bold" style="background:#007FA8">2</span>
-        <p class="text-xs text-blue-800 leading-relaxed">사내 <strong>무단 촬영 금지</strong> (업무상 필요 시 부서장 승인)</p>
+        <span class="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 text-xs text-white font-bold" style="background:#002c5f">2</span>
+        <p class="text-xs text-gray-700 leading-relaxed">사내 <strong>무단 촬영 금지</strong> (업무상 필요 시 부서장 승인)</p>
       </div>
       <div class="flex items-start gap-2">
-        <span class="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 text-xs text-white font-bold" style="background:#007FA8">3</span>
-        <p class="text-xs text-blue-800 leading-relaxed">신차 정보(디자인/일정/가격) <strong>철저한 비밀 유지</strong></p>
+        <span class="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 text-xs text-white font-bold" style="background:#002c5f">3</span>
+        <p class="text-xs text-gray-700 leading-relaxed">신차 정보(디자인/일정/가격) <strong>철저한 비밀 유지</strong></p>
       </div>
       <div class="flex items-start gap-2">
-        <span class="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 text-xs text-white font-bold" style="background:#007FA8">4</span>
-        <p class="text-xs text-blue-800 leading-relaxed">방문객 사내 이동 시 <strong>임직원 동행 필수</strong></p>
+        <span class="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 text-xs text-white font-bold" style="background:#002c5f">4</span>
+        <p class="text-xs text-gray-700 leading-relaxed">방문객 사내 이동 시 <strong>임직원 동행 필수</strong></p>
       </div>
     </div>
   </div>
