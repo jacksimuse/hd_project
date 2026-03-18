@@ -732,7 +732,7 @@ function selectScale(fieldId, value) {
   if (labelEl) { labelEl.textContent = labels[value - 1]; labelEl.style.display = 'block'; }
 }
 
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzLf2qpRas7ByW7Q7hjBBVzd9v7Gt27elfFUDqRT1Yi1ZNlrcM2KjnZXjxN60ED6DBjSA/exec'; // ← 배포 후 복사한 URL 붙여넣기
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxmREKCBYPGLLRAhMg02-GYLJb-9hZjnvFTtdZKROouihFM0UOStEUmfaHsuZbTSWqxwQ/exec'; // ← 배포 후 복사한 URL 붙여넣기
 
 const BOOTH_LABELS = ['교육영상 재생부스', '전시월 부스', '에어볼 게임을 통한 퀴즈 부스'];
 
@@ -768,15 +768,13 @@ async function handleSubmit() {
   };
 
   try {
-    await fetch(APPS_SCRIPT_URL, {
-      method: 'POST',
-      mode: 'no-cors',
-      headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify(payload)
+    const params = new URLSearchParams({ data: JSON.stringify(payload) });
+    await fetch(APPS_SCRIPT_URL + '?' + params.toString(), {
+      method: 'GET',
+      mode: 'no-cors'
     });
   } catch (err) {
     console.error('시트 기록 실패:', err);
-    // 전송 실패 시에도 완료 화면은 정상 진행
   }
 
   state.screen = 'complete';
