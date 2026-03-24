@@ -478,7 +478,7 @@ function openPopup(isCorrect, explanation, qi) {
 function renderPopup() {
   const { isCorrect, explanation, isLast } = state.popup;
   const color = isCorrect ? '#002c5f' : '#dc2626';
-  const bgColor = isCorrect ? '#f0fdf4' : '#fef2f2';
+  const bgColor = isCorrect ? '#EFF6FF' : '#fef2f2';
   return `
 <div class="fixed inset-0 z-50 flex items-end justify-center px-4 pb-6" style="background:rgba(0,0,0,0.55)">
   <div class="pop-in w-full max-w-md bg-white rounded-3xl overflow-hidden shadow-2xl">
@@ -488,10 +488,8 @@ function renderPopup() {
       <div class="flex items-center gap-4">
         <!-- Owl -->
         <div class="w-16 h-16 rounded-2xl flex items-center justify-center flex-shrink-0 overflow-hidden"
-          style="background:${isCorrect ? '#dcfce7' : '#fee2e2'}">
-          <img src="owl.png" alt="부엉이" class="w-14 h-14 object-contain"
-            onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
-          <span style="display:none;font-size:2.2rem">${isCorrect ? '🦉' : '🦉'}</span>
+          style="background:${isCorrect ? '#EFF6FF' : '#fef2f2'}">
+          <img src="${isCorrect ? 'right.png' : 'wrong.png'}" alt="${isCorrect ? '정답' : '오답'}" class="w-14 h-14 object-contain rounded-2xl">
         </div>
         <div>
           <p class="text-xs leading-8 font-bold uppercase tracking-wider mb-0.5" style="color:${color}">
