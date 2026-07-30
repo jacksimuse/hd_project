@@ -323,7 +323,7 @@ function renderQuiz(animate = true) {
   const qs = QUIZ_SETS[state.set];
   const qi = state.currentQ;
   const q = qs[qi];
-  const pct = (qi / qs.length) * 100;
+  const pct = ((qi + 1) / qs.length) * 100;
 
   // Initialize shuffle once per question
   if (q.type === 'sequence' && !state.seqShuffled) {
