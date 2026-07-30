@@ -147,7 +147,7 @@ const state = {
   survey: {
     q1: null, q2: '', q3: null, q4: '',
     q5: null, q6: null, q7: '', q8: '',
-    name: '', phone2: '', phone3: ''
+    name: '', empNo: '', phone2: '', phone3: ''
   }
 };
 
@@ -716,6 +716,13 @@ function renderSurvey(animate = true) {
           class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-sm leading-6 focus:outline-none focus:border-blue-400 transition-colors" />
       </div>
 
+      <div class="mb-3">
+        <label class="text-xs font-bold text-gray-600 mb-1.5 block">사번</label>
+        <input type="text" inputmode="text" placeholder="사번 입력" value="${h(sv.empNo)}"
+          oninput="state.survey.empNo=this.value"
+          class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-sm leading-6 focus:outline-none focus:border-blue-400 transition-colors" />
+      </div>
+
       <div>
         <label class="text-xs font-bold text-gray-600 mb-1.5 block">핸드폰 번호</label>
         <div class="flex items-center gap-1.5">
@@ -822,6 +829,7 @@ async function handleSubmit() {
     q7: sv.q7,
     q8: sv.q8,
     name: sv.name,
+    empNo: sv.empNo,
     phone: sv.phone2 || sv.phone3
       ? `010-${sv.phone2}-${sv.phone3}`
       : ''
