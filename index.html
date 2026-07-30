@@ -89,40 +89,40 @@ const QUIZ_SETS = {
     },
     {
       type: 'multiple',
-      question: '<br>사내에 위장막이 씌워져 있는 차량이 방치되어 있을 때 적절한 행동은 무엇인가요?',
-      options: ['위장막을 살짝 걷어본다', '신기하니까 사진을 찍어 외부에 공유한다', '다른 사람 몰래 탑승해본다', '관리부서에 제보한다'],
-      answer: 3,
+      question: '<br>사내에 위장막이 씌워져 있는 차량을 보았을 때 <strong>적절하지 않은</strong> 행동을 모두 고르시오',
+      options: ['위장막을 살짝 걷어본다', '신기하니까 사진을 찍어 외부에 공유한다', '다른 사람 몰래 탑승해본다'],
+      multi: true,
+      answer: [0, 1, 2],
       explanation: '위장막이 씌워져 있는 차량은 신차이기 때문에 <strong>신차와 관련된 일체의 정보(디자인 / 생산일정 / 차량가격 / 특성 등)는 비밀로 관리</strong>되어야 합니다.'
     }
   ],
   2: [
     {
       type: 'ox',
-      question: '<br>사내에서 사진을 촬영하는 것은 가능하다.',
+      question: '<br>사내에서 허가 없이 촬영을 하는 것은 가능하다.',
       answer: 'X',
-      explanation: '원칙적으로 <strong>사내에서 촬영을 하여서는 안됩니다.</strong> 불가피하게 업무상 촬영이 꼭 필요한 경우라면, 소속 부서장의 승인을 득한 후 각 사업장 보안관련 부서에 촬영 프로세스를 문의해야 합니다.'
+      explanation: '원칙적으로 <strong>사내에서 허가 없이 촬영을 하여서는 안됩니다.</strong> 불가피하게 업무상 촬영이 꼭 필요한 경우라면, 소속 부서장의 승인을 득한 후 각 사업장 보안관련 부서에 촬영 프로세스를 문의해야 합니다.'
     },
     {
-      type: 'sequence',
-      question: '<br>회사 자산을 사외로 반출할 경우, 자산반출 프로세스를 순서에 맞게 나열해 주세요.',
-      items: ['출입보안시스템 접속', '반출증 작성', '반출결재'],
-      answer: [0, 1, 2],
-      explanation: '<strong>자산반출 프로세스:</strong><br>① 출입보안시스템 접속<br>② 반출증 작성<br>③ 반출결재'
+      type: 'ox',
+      question: '<br>회사 자산을 허가 없이 사외로 반출하는 것은 가능하다.',
+      answer: 'X',
+      explanation: '회사 자산을 <strong>허가 없이 사외로 반출하여서는 안됩니다.</strong><br>업무 목적상 반출이 필요한 경우,<br><strong>출입보안시스템</strong>에서 <strong>반출증을 작성</strong>해야 합니다.'
     }
   ],
   3: [
     {
-      type: 'sequence',
-      question: '<br>업무 목적상 방문객 출입이 필요할 경우, 방문객 출입 절차를 순서에 맞게 나열해 주세요.',
-      items: ['출입예약시스템 접속', '피방문자 승인', '방문객센터 방문', '반입 물품 확인 및 방문 접수'],
-      answer: [0, 1, 2, 3],
-      explanation: '<strong>방문객 출입 절차:</strong><br>① 출입예약시스템 접속<br>② 피방문자 승인<br>③ 방문객센터 방문<br>④ 반입 물품 확인 및 방문 접수'
+      type: 'multiple',
+      question: '<br>업무 목적 상, 방문객이 사내로 방문하려고 할 때, 안내해줘야 하는 방문신청 사이트는 무엇인가요?',
+      options: ['출입예약시스템', '지역게시판', 'H-Mate'],
+      answer: 0,
+      explanation: '업무 목적 상, 방문객이 사내로 방문하려고 할 때, <strong>출입예약시스템</strong>을 안내해주면 됩니다.'
     },
     {
       type: 'ox',
-      question: '<br>방문객이 사내에 출입하는 경우, 피방문자(임직원)은 방문객과 항상 동행해야 한다.',
-      answer: 'O',
-      explanation: '방문 신청이 완료된 방문객이라 하더라도, <strong>출입 승인이 허가된 구역만 출입이 가능하기에 사내에서는 항상 피방문자와 동행</strong>해야 합니다.'
+      question: '<br>사내 출입 허가된 방문객의 경우,<br> 사내 어디든 자유롭게 접근할 수 있다.',
+      answer: 'X',
+      explanation: '사내 출입 허가된 방문객이라고 하더라도 <strong>출입 승인이 허가된 구역에만 출입이 가능</strong>합니다. 피방문자(담당자)는 방문객에게 해당 내용을 안내해 줘야 합니다.'
     }
   ]
 };
@@ -142,6 +142,7 @@ const state = {
   currentQ: 0,
   seqSelected: [],
   seqShuffled: null,
+  multiSelected: [],
   popup: null, // { isCorrect, explanation, isLast }
   survey: {
     q1: null, q2: '', q3: null, q4: '',
@@ -310,6 +311,7 @@ function handleStart() {
   state.currentQ = 0;
   state.seqSelected = [];
   state.seqShuffled = null;
+  state.multiSelected = [];
   state.screen = 'quiz';
   render();
 }
@@ -355,7 +357,7 @@ function renderQuiz(animate = true) {
     <div class="mb-3">
       <span class="inline-block text-xs font-bold px-3 py-1 rounded-full
         ${q.type==='ox' ? 'bg-blue-100 text-blue-700' : q.type==='multiple' ? 'bg-purple-100 text-purple-700' : 'bg-amber-100 text-amber-700'}">
-        ${q.type==='ox' ? 'O / X 문제' : q.type==='multiple' ? '객관식' : '순서 맞추기'}
+        ${q.type==='ox' ? 'O / X 문제' : q.type==='multiple' ? (q.multi ? '객관식 · 복수 선택' : '객관식') : '순서 맞추기'}
       </span>
     </div>
     <p class="text-base font-bold text-gray-800 leading-relaxed mb-6">Q${qi+1}. ${q.question}</p>
@@ -364,6 +366,16 @@ function renderQuiz(animate = true) {
     ${q.type === 'multiple' ? renderMultiple(q, qi) : ''}
     ${q.type === 'sequence' ? renderSequence(q) : ''}
   </div>
+
+  <!-- Multi-select Submit Button -->
+  ${q.type === 'multiple' && q.multi ? `
+  <div class="px-5 pb-10">
+    <button id="multi-submit-btn" onclick="handleMultiSubmit(${qi})"
+      style="${state.multiSelected.length > 0 ? 'background:#002C5F' : 'background:#D1D5DB'}"
+      class="btn-press w-full text-white py-4 rounded-2xl text-base font-bold shadow-lg">
+      정답 확인하기
+    </button>
+  </div>` : ''}
 
   <!-- Sequence Submit Button -->
   ${q.type === 'sequence' ? `
@@ -395,18 +407,27 @@ function renderOX(qi) {
 }
 
 function renderMultiple(q, qi) {
-  const nums = ['①','②','③','④'];
   return `
-<div class="flex flex-col gap-3">
-  ${q.options.map((opt, i) => `
-  <button onclick="handleMultiple(${i},${qi})"
-    class="btn-press text-left px-4 py-4 rounded-2xl border-2 border-gray-200 bg-white shadow-sm hover:border-blue-300 hover:bg-blue-50 transition-all flex items-center gap-3">
-    <span class="w-8 h-8 rounded-full bg-gray-100 text-center text-sm leading-6 font-bold text-gray-600 flex-shrink-0 flex items-center justify-center">
-      ${nums[i]}
-    </span>
-    <span class="text-sm leading-6 text-gray-700">${opt}</span>
-  </button>`).join('')}
+<div id="multi-list" class="flex flex-col gap-3">
+  ${renderMultiItems(q, qi)}
 </div>`;
+}
+
+function renderMultiItems(q, qi) {
+  const nums = ['①','②','③','④'];
+  const opts = q.options || q.items || [];
+  return opts.map((opt, i) => {
+    const isSel = q.multi && state.multiSelected.includes(i);
+    const handler = q.multi ? `handleMultiToggle(${i})` : `handleMultiple(${i},${qi})`;
+    return `
+  <button onclick="${handler}"
+    class="btn-press text-left px-4 py-4 rounded-2xl border-2 shadow-sm transition-all flex items-center gap-3 ${isSel ? 'border-blue-500 bg-blue-50' : 'border-gray-200 bg-white hover:border-blue-300 hover:bg-blue-50'}">
+    <span class="w-8 h-8 rounded-full text-center text-sm leading-6 font-bold flex-shrink-0 flex items-center justify-center ${isSel ? 'text-white' : 'bg-gray-100 text-gray-600'}" ${isSel ? 'style="background:#002C5F"' : ''}>
+      ${isSel ? '✓' : nums[i]}
+    </span>
+    <span class="text-sm leading-6 ${isSel ? 'text-blue-800 font-bold' : 'text-gray-700'}">${opt}</span>
+  </button>`;
+  }).join('');
 }
 
 function renderSeqItems(q) {
@@ -445,6 +466,27 @@ function handleOX(sel, qi) {
 function handleMultiple(idx, qi) {
   const q = QUIZ_SETS[state.set][qi];
   openPopup(idx === q.answer, q.explanation, qi);
+}
+
+function handleMultiToggle(idx) {
+  const pos = state.multiSelected.indexOf(idx);
+  if (pos !== -1) state.multiSelected.splice(pos, 1);
+  else state.multiSelected.push(idx);
+  const qi = state.currentQ;
+  const q = QUIZ_SETS[state.set][qi];
+  const listEl = document.getElementById('multi-list');
+  if (listEl) listEl.innerHTML = renderMultiItems(q, qi);
+  const btn = document.getElementById('multi-submit-btn');
+  if (btn) btn.style.background = state.multiSelected.length > 0 ? '#002C5F' : '#D1D5DB';
+}
+
+function handleMultiSubmit(qi) {
+  if (state.multiSelected.length === 0) return;
+  const q = QUIZ_SETS[state.set][qi];
+  const picked = [...state.multiSelected].sort((a, b) => a - b);
+  const answer = [...q.answer].sort((a, b) => a - b);
+  const correct = JSON.stringify(picked) === JSON.stringify(answer);
+  openPopup(correct, q.explanation, qi);
 }
 
 function handleSeqClick(idx) {
@@ -525,6 +567,7 @@ function closePopup() {
   state.popup = null;
   state.seqSelected = [];
   state.seqShuffled = null;
+  state.multiSelected = [];
   if (isLast) {
     state.screen = 'survey';
   } else {
@@ -663,8 +706,8 @@ function renderSurvey(animate = true) {
         <span class="text-xs font-bold text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">선택</span>
       </div>
       <p class="text-sm leading-6 font-bold text-gray-800 mb-1">경품 추첨 참여를 원하시면<br>정보를 입력해 주세요.</p>
-      <p class="text-xs text-gray-400 mb-4 leading-relaxed">캠페인 종료 후 설문조사가 전달될 예정입니다.<br>
-설문조사에 참여해주신 분들 중 추첨을 통하여 소정의 상품을 전달드릴 예정이오니 <strong>설문조사 참여 의사가 있으시다면 아래 정보를 입력하여 주시기 바랍니다.</strong></p>
+      <p class="text-xs text-gray-400 mb-4 leading-relaxed">캠페인 종료 후 보안의식조사가 전달될 예정입니다.<br>
+보안의식조사에 참여해주신 분들 중 추첨을 통하여 소정의 상품을 전달드릴 예정이오니 <strong>참여 의사가 있으시다면 아래 정보를 입력하여 주시기 바랍니다.</strong></p>
 
       <div class="mb-3">
         <label class="text-xs font-bold text-gray-600 mb-1.5 block">이름</label>
@@ -814,7 +857,7 @@ function renderComplete(animate = true) {
   </div>
 
   <h2 class="text-2xl font-black text-gray-800 mb-2">제출 완료!</h2>
-  <p class="text-base font-semibold text-gray-600 mb-1">${h(state.location)} · ${h(state.team)}팀</p>
+  <p class="text-base font-semibold text-gray-600 mb-1">${h(state.location)} · ${h(state.team)}</p>
 
   <!-- Security tips -->
   <div class="w-full rounded-2xl p-5 mb-8 border border-gray-200 text-left" style="background:#ffffff">
@@ -831,10 +874,6 @@ function renderComplete(animate = true) {
       <div class="flex items-start gap-2">
         <span class="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 text-xs text-white font-bold" style="background:#002c5f">3</span>
         <p class="text-xs text-gray-700 leading-relaxed">자산 반출 시 <strong>반드시 반출증 작성</strong></p>
-      </div>
-      <div class="flex items-start gap-2">
-        <span class="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 text-xs text-white font-bold" style="background:#002c5f">4</span>
-        <p class="text-xs text-gray-700 leading-relaxed">방문객 사내 이동 시<br><strong>임직원 동행 필수</strong></p>
       </div>
     </div>
   </div>
